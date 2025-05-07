@@ -1,0 +1,52 @@
+// {
+//   "compilerOptions": {
+//     "paths": {
+//       "@/*": ["./*"],
+//       "contentlayer/generated": ["./.contentlayer/generated"]
+//     }
+//   },
+//   "include": [
+//     "next-env.d.ts",
+//     "**/*.ts",
+//     "**/*.tsx",
+//     ".contentlayer/generated",
+//     ".next/types/**/*.ts"
+//   ],
+//   "exclude": ["node_modules"]
+// }
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "contentlayer/generated": ["./.contentlayer/generated"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".contentlayer/generated"
+, "app/[locale]/(dashboard)/(tachograph)/tachograph-faults-and-events/components/faults-events-action.jsx", "app/[locale]/manager/modulelist/components/custom-select.jsx", "app/[locale]/manager/manufacturerlist/components/custom-select.jsx", "components/partials/manager-header/horizontal-menu.jsx"  ],
+  "exclude": ["node_modules"]
+}
