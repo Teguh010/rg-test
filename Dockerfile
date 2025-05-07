@@ -26,6 +26,11 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Add standalone output to next.config.js if it doesn't exist
+RUN if ! grep -q "output.*standalone" next.config.js; then \
+      sed -i '/module.exports/a\  output: "standalone",' next.config.js; \
+    fi
+
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \
   elif [ -f package-lock.json ]; then npm run build; \
