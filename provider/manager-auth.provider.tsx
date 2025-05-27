@@ -10,7 +10,7 @@ const ManagerAuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      const userData = localStorage.getItem('userData');
+      const userData = localStorage.getItem('userData-manager');
       if (!userData) {
         router.replace('/auth/manager-login');
         return;

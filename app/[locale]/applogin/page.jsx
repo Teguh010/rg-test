@@ -33,14 +33,25 @@ const AutoLoginContent = () => {
         const result = await apiAuth(username, password, customer);
         toast.success('Login Successful');
 
-        // Set user data in context (same as login form)
-        setUser({
+        // Create user data object
+        const userData = {
           token: result.access_token,
           username,
           password,
-          customer
-        });
+          customer,
+          role: 'user' // Explicitly set role
+        };
 
+        // Set user data in context
+        setUser(userData);
+        
+        // Store in client-specific storage
+        localStorage.setItem('userData-client', JSON.stringify(userData));
+        localStorage.setItem('current-role', 'user');
+        
+        // Remove any old generic userData if it exists
+        localStorage.removeItem('userData');
+        
         // Redirect to map page
         window.location.assign('/map');
       } catch (error) {

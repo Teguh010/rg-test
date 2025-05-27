@@ -1,82 +1,99 @@
-import React from "react";
-import * as NavigationMenu from "@radix-ui/react-navigation-menu";
-import { menusConfig } from "@/config/menus";
-import { managerMenusConfig } from "@/config/manager-menus";
-import { cn, firstUpperLetter } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
-import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import image from "@/public/images/all-img/man-with-laptop.png";
-import Image from "next/image";
-import logo from "@/public/images/logo/logo_mini_tracegrid.png";
-import { useTranslation } from 'react-i18next';
-import { useUser } from "@/context/UserContext";
-import { usePathname, useRouter } from 'next/navigation';
-import { useSelectedCustomerStore } from "@/store/selected-customer";
-import { selectCustomer } from "@/models/manager/session";
-import toast from "react-hot-toast";
-import CustomSelect from "@/components/partials/manager-header/custom-select";
+import React from "react"
+import * as NavigationMenu from "@radix-ui/react-navigation-menu"
+import { menusConfig } from "@/config/menus"
+import { managerMenusConfig } from "@/config/manager-menus"
+import { cn, firstUpperLetter } from "@/lib/utils"
+import { ChevronDown } from "lucide-react"
+import Link from "next/link"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import image from "@/public/images/all-img/man-with-laptop.png"
+import Image from "next/image"
+import logo from "@/public/images/logo/logo_mini_tracegrid.png"
+import { useTranslation } from "react-i18next"
+import { useUser } from "@/context/UserContext"
+import { usePathname, useRouter } from "next/navigation"
+import { useSelectedCustomerStore } from "@/store/selected-customer"
+import { selectCustomer } from "@/models/manager/session"
+import toast from "react-hot-toast"
+import CustomSelect from "@/components/partials/manager-header/custom-select"
 
 export default function MainMenu({ customMenus }) {
-  const { models: { userProfileData }, operations: { getUserRef } } = useUser();
-  const isManager = userProfileData?.role === "manager";
-  
-  const menus = isManager 
-    ? (customMenus?.mainNav || managerMenusConfig.mainNav || []) 
-    : menusConfig.mainNav || [];
-  
-  const { t } = useTranslation();
-  const [offset, setOffset] = React.useState();
-  const [list, setList] = React.useState();
-  const [value, setValue] = React.useState();
-  
-  const { 
-    selectedCustomerId, 
-    setSelectedCustomer,
-    customers,
-    isLoading
-  } = useSelectedCustomerStore();
-  
-  const [selectedValue, setSelectedValue] = React.useState(selectedCustomerId?.toString() || '');
+  const {
+    models: { userProfileData },
+    operations: { getUserRef }
+  } = useUser()
+  const isManager = userProfileData?.role === "manager"
+  const pathname = usePathname()
+  const router = useRouter()
+  const { i18n } = useTranslation()
+  const currentLocale = i18n.language
 
-  const customerOptions = customers.map(customer => ({
+  // Determine which menus to use based on customMenus, user role, and current path
+  let menus
+  if (customMenus?.mainNav) {
+    // If customMenus is provided, use it
+    menus = customMenus.mainNav
+  } else if (isManager && pathname.includes("/manager")) {
+    // For manager pages without customMenus, use managerMenusConfig
+    menus = managerMenusConfig.mainNav || []
+  } else {
+    // For client pages without customMenus, use menusConfig
+    menus = menusConfig.mainNav || []
+  }
+
+  const { t } = useTranslation()
+  const [offset, setOffset] = React.useState()
+  const [list, setList] = React.useState()
+  const [value, setValue] = React.useState()
+
+  const { selectedCustomerId, setSelectedCustomer, customers, isLoading } =
+    useSelectedCustomerStore()
+
+  const [selectedValue, setSelectedValue] = React.useState(selectedCustomerId?.toString() || "")
+
+  const customerOptions = customers.map((customer) => ({
     value: customer.id.toString(),
     label: customer.name
-  }));
+  }))
 
   const handleCustomerSelect = async (value) => {
-    if (!isManager) return;
-    
-    setSelectedValue(value); // Update local state
-    const currentUser = getUserRef();
-    if (!currentUser?.token) return;
+    if (!isManager) return
+
+    setSelectedValue(value)
+    const currentUser = getUserRef()
+    if (!currentUser?.token) return
 
     try {
-      const customer = customers.find(c => c.id === Number(value));
-      if (!customer) return;
+      const customer = customers.find((c) => c.id === Number(value))
+      if (!customer) return
 
-      const response = await selectCustomer(currentUser.token, customer.id);
+      const response = await selectCustomer(currentUser.token, customer.id)
       if (response?.success) {
-        setSelectedCustomer(customer.id, customer.name);
+        setSelectedCustomer(customer.id, customer.name)
+        
+        //if on dashboard page, redirect to module overview
+        if (pathname.includes("/manager/dashboard")) {
+          router.push(`/${currentLocale}/manager/moduleoverview`)
+        }
       } else {
-        toast.error(t("error.select_customer"));
+        toast.error(t("error.select_customer"))
       }
     } catch (error) {
-      console.error('Error selecting customer:', error);
-      toast.error(t("error.select_customer"));
+      console.error("Error selecting customer:", error)
+      toast.error(t("error.select_customer"))
     }
-  };
+  }
 
   const onNodeUpdate = (trigger, itemValue) => {
     if (trigger && list && value === itemValue) {
-      const triggerOffsetLeft = trigger.offsetLeft + trigger.offsetWidth / 6;
+      const triggerOffsetLeft = trigger.offsetLeft + trigger.offsetWidth / 6
 
-      setOffset(Math.round(triggerOffsetLeft));
+      setOffset(Math.round(triggerOffsetLeft))
     } else if (value === "") {
-      setOffset(null);
+      setOffset(null)
     }
-    return trigger;
-  };
+    return trigger
+  }
 
   return (
     <div>
@@ -90,16 +107,32 @@ export default function MainMenu({ customMenus }) {
           >
             <Image src={logo} alt='' objectFit='cover' className=' mx-auto text-primary h-8 w-8' />
           </Link>
-          {isManager && (
+          {isManager && pathname.includes("/manager") && (
             <div className='pt-2.5'>
               <CustomSelect
                 value={selectedValue}
                 onChange={handleCustomerSelect}
                 options={customerOptions}
                 placeholder={t("select_customer")}
-                disabled={isLoading}
                 className='min-w-[200px]'
-                onClear={() => setSelectedValue("")}
+                onClear={async () => {
+                  setSelectedValue("")
+
+                  const currentUser = getUserRef()
+                  if (!currentUser?.token) return
+
+                  try {
+                    const response = await selectCustomer(currentUser.token, 0)
+                    if (response?.success) {
+                      setSelectedCustomer(null, null)
+                    } else {
+                      toast.error("Error Selecting Customer")
+                    }
+                  } catch (error) {
+                    console.error("Error deselecting customer:", error)
+                    toast.error("Error deselecting Customer")
+                  }
+                }}
               />
             </div>
           )}
@@ -108,28 +141,28 @@ export default function MainMenu({ customMenus }) {
               {!item.child && !item.megaMenu ? (
                 <Link
                   href={item.href}
-                  className="flex items-center py-4 cursor-pointer hover:text-primary"
+                  className='flex items-center py-4 cursor-pointer hover:text-primary'
                 >
-                  <item.icon className="h-5 w-5 mr-2" />
-                  <span className="text-sm font-medium text-default-700">{t(item.title)}</span>
+                  <item.icon className='h-5 w-5 mr-2' />
+                  <span className='text-sm font-medium text-default-700'>{t(item.title)}</span>
                 </Link>
               ) : (
                 <>
                   <NavigationMenu.Trigger
                     ref={(node) => onNodeUpdate(node, item)}
                     asChild
-                    className="flex items-center"
+                    className='flex items-center'
                   >
                     <div
-                      className="flex items-center py-4 cursor-pointer group data-[state=open]:text-primary"
+                      className='flex items-center py-4 cursor-pointer group data-[state=open]:text-primary'
                       aria-controls={`radix-:rd:-content-${index}`}
                       id={`radix-:rd:-trigger-${index}`}
                     >
-                      <item.icon className="h-5 w-5 mr-2" />
-                      <span className="text-sm font-medium text-default-700">{t(item.title)}</span>
+                      <item.icon className='h-5 w-5 mr-2' />
+                      <span className='text-sm font-medium text-default-700'>{t(item.title)}</span>
                       <ChevronDown
-                        className="relative top-[1px] ml-1 h-4 w-4 transition duration-200 group-data-[state=open]:rotate-180"
-                        aria-hidden="true"
+                        className='relative top-[1px] ml-1 h-4 w-4 transition duration-200 group-data-[state=open]:rotate-180'
+                        aria-hidden='true'
                       />
                     </div>
                   </NavigationMenu.Trigger>
@@ -144,16 +177,16 @@ export default function MainMenu({ customMenus }) {
                   >
                     {/* Existing content for dropdown menus */}
                     {item.child && (
-                      <div className="min-w-[200px] p-4">
+                      <div className='min-w-[200px] p-4'>
                         {item.child?.map((childItem, index) => (
                           <ListItem
-                            className="text-sm font-medium text-default-700"
+                            className='text-sm font-medium text-default-700'
                             key={`${childItem.title}-${index}`}
                             title={t(childItem.title)}
                             href={childItem.href}
                             childItem={childItem}
                           >
-                            <childItem.icon className="h-5 w-5" />
+                            <childItem.icon className='h-5 w-5' />
                           </ListItem>
                         ))}
                       </div>
@@ -251,21 +284,22 @@ export default function MainMenu({ customMenus }) {
 
 const ListItem = React.forwardRef(
   ({ className, children, title, childItem, ...props }, forwardedRef) => {
-    const { t } = useTranslation();
-    const pathname = usePathname();
-    const router = useRouter();
-    const { models: { userProfileData } } = useUser();
-    const isManager = userProfileData?.role === "manager";
-    const isActive = pathname === childItem.href;
-    
+    const { t } = useTranslation()
+    const pathname = usePathname()
+    const router = useRouter()
+    const {
+      models: { userProfileData }
+    } = useUser()
+    const isManager = userProfileData?.role === "manager"
+    const isActive = pathname === childItem.href
+
     const handleClick = (e) => {
-      // If current page is the same as the clicked menu item and it's a manager page
-      if (isActive && isManager && childItem.href.includes('/manager/')) {
-        e.preventDefault();
-        window.location.reload();
+      if (isActive && isManager && childItem.href.includes("/manager/")) {
+        e.preventDefault()
+        window.location.reload()
       }
-    };
-    
+    }
+
     return (
       <NavigationMenu.Link asChild>
         <Link
@@ -281,6 +315,6 @@ const ListItem = React.forwardRef(
           <div>{t(title)}</div>
         </Link>
       </NavigationMenu.Link>
-    );
+    )
   }
-);
+)

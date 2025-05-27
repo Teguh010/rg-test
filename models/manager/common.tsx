@@ -8,14 +8,18 @@ interface RequestBody {
 }
 
 export const apiManagerRequest = async (_token: string | null, method: string, params?: any) => {
-  if (!_token) {
+  // Get token from the manager storage
+  const userData = JSON.parse(localStorage.getItem("userData-manager") || "{}");
+  const latestToken = userData.token || _token;
+
+  if (!latestToken) {
     return null;
   }
 
   const url = process.env.NEXT_PUBLIC_TRACEGRID_API_URL + '/tracegrid_api/manager';
   const headers = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${_token}`
+    Authorization: `Bearer ${latestToken}`
   };
 
   const methodsWithCustomParams = {
@@ -81,7 +85,8 @@ export const apiManagerAuth = async (username: string, password: string, manager
 
 // Add new refresh token function for manager
 export const apiManagerRefreshToken = async () => {
-  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  // Get token from the manager storage
+  const userData = JSON.parse(localStorage.getItem("userData-manager") || "{}");
   const { token, username, password, manager } = userData;
 
   if (!token) {
@@ -117,7 +122,7 @@ export const apiManagerRefreshToken = async () => {
             ...userData,
             token: loginResponse.access_token
           };
-          localStorage.setItem('userData', JSON.stringify(updatedUserData));
+          localStorage.setItem('userData-manager', JSON.stringify(updatedUserData));
           
           return loginResponse;
         }
@@ -131,14 +136,14 @@ export const apiManagerRefreshToken = async () => {
       ...userData,
       token: dataResponse.access_token
     };
-    localStorage.setItem('userData', JSON.stringify(updatedUserData));
+    localStorage.setItem('userData-manager', JSON.stringify(updatedUserData));
 
     return dataResponse;
   } catch (error) {
     console.error('Manager Refresh Token Error:', error);
     // Clear userData if refresh completely fails
     if (error.message === 'Re-login failed' || error.message === 'Incomplete credentials for re-login') {
-      localStorage.removeItem('userData');
+      localStorage.removeItem('userData-manager');
     }
     throw error;
   }

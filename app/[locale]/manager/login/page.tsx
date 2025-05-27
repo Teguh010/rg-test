@@ -1,15 +1,55 @@
 "use client";
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContentWrapper } from "@/components/ui/dialog";
 import Image from "next/image";
 import LogInForm from "@/components/auth/manager-login-form";
 import background from "@/public/images/auth/line.png";
+import { isLocationAllowed } from "@/lib/geo-restriction";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-hot-toast";
 
 const LoginPage = () => {
-  const [openVideo, setOpenVideo] = useState(false);
+  const [isAllowed, setIsAllowed] = useState(true);
+  const [isChecking, setIsChecking] = useState(true);
+  const router = useRouter();
+  const { t, i18n } = useTranslation();
+  const currentLocale = i18n.language;
+
+  useEffect(() => {
+    const checkLocationAccess = async () => {
+      try {
+        const allowed = await isLocationAllowed();
+        setIsAllowed(allowed);
+        
+        if (!allowed) {
+          router.push(`/${currentLocale}`);
+        }
+      } catch (error) {
+        console.error('Error checking location access:', error);
+        setIsAllowed(false);
+        router.push(`/${currentLocale}`);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    
+    checkLocationAccess();
+  }, [router, currentLocale, t]);
+
+  if (isChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (!isAllowed) {
+    return null;
+  }
 
   return (
     <>

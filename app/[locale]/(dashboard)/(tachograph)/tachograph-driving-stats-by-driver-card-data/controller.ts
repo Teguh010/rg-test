@@ -6,6 +6,7 @@ import {
   firstUpperLetter,
   reorderObject,
   cleanDataStructure,
+  parseTimeString,
 } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
@@ -38,20 +39,20 @@ export const controller = () => {
   const [dataObjectList, setDataObjectList] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [checked, setChecked] = useState(false);
+  const [ignoreList] = useState([
+    { title: t("events") },
+    { title: t("unknown") },
+  ]);
+  const [orderList] = useState([]);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCheckedChange = (value: any) => {
     setChecked(value);
   };
 
-  const [ignoreList] = useState([{ title: t("events") }]);
-  const [orderList] = useState([]);
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processObject = (obj: any): any => {
-    // Creamos una copia del objeto para no mutar el original
     const newObj = { ...obj };
-
-    // Aplicamos las transformaciones al objeto actual
     if (newObj.date) {
       newObj.date = format(newObj.date, `${dateFormat} ${timeFormat}`);
     }
@@ -60,6 +61,21 @@ export const controller = () => {
     } else if (newObj.is_holiday === 1) {
       newObj.is_holiday = true;
     }
+    /*    if (newObj.available) {
+      newObj.available = parseTimeString(newObj.available, t);
+    }
+    if (newObj.driving) {
+      newObj.driving = parseTimeString(newObj.driving, t);
+    }
+    if (newObj.rest) {
+      newObj.rest = parseTimeString(newObj.rest, t);
+    }
+    if (newObj.unknown) {
+      newObj.unknown = parseTimeString(newObj.unknown, t);
+    }
+    if (newObj.working) {
+      newObj.working = parseTimeString(newObj.working, t);
+    } */
 
     Object.keys(newObj).forEach((key) => {
       const value = newObj[key];
@@ -138,29 +154,27 @@ export const controller = () => {
           getUserRef().token,
           params
         );
-        if (dataTachoDrivingStatList) {
-          const dataTachoDrivingStatListClean = cleanDataStructure(
-            dataTachoDrivingStatList
-          );
-          const dataTachoDrivingStatListFilter = filterData(
-            dataTachoDrivingStatListClean
-          );
-          const dataTachoDrivingStatListTranslate = translateDataStructure(
-            dataTachoDrivingStatListFilter,
-            t,
-            [
-              "date",
-              "driving",
-              "working",
-              "rest",
-              "available",
-              "unknown",
-              "total_work",
-              "night_time",
-            ]
-          );
-          setDataTachoDrivingStatList(dataTachoDrivingStatListTranslate);
-        }
+        const dataTachoDrivingStatListClean = cleanDataStructure(
+          dataTachoDrivingStatList
+        );
+        const dataTachoDrivingStatListFilter = filterData(
+          dataTachoDrivingStatListClean
+        );
+        const dataTachoDrivingStatListTranslate = translateDataStructure(
+          dataTachoDrivingStatListFilter,
+          t,
+          [
+            "date",
+            "driving",
+            "working",
+            "rest",
+            "available",
+            "unknown",
+            "total_work",
+            "night_time",
+          ]
+        );
+        setDataTachoDrivingStatList(dataTachoDrivingStatListTranslate);
       } catch (error) {
         toast.error(firstUpperLetter(t("process_error")));
         console.error("Error fetching client info:", error);

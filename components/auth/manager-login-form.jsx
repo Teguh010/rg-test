@@ -102,6 +102,10 @@ const ManagerLoginForm = () => {
     // Set user data
     setUser(userData)
 
+    // Store in manager-specific storage
+    localStorage.setItem('userData-manager', JSON.stringify(userData));
+    localStorage.setItem('current-role', 'manager');
+
     await new Promise((resolve) => setTimeout(resolve, 300))
 
     // Tunggu sebentar untuk memastikan data tersimpan
@@ -203,11 +207,6 @@ const ManagerLoginForm = () => {
           </Button>
         </div>
       </form>
-      <div className='mt-4 mb-6'>
-        <Button variant='outline' className='w-full' onClick={() => router.push("/")}>
-          Login as User
-        </Button>
-      </div>
     </div>
   )
 }

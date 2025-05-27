@@ -7,7 +7,6 @@ import AdvancedTable from "@/components/partials/advanced";
 import { useTranslation } from "react-i18next";
 import { Label } from "@radix-ui/react-label";
 import { firstUpperLetter } from "@/lib/utils";
-/* import FaultsEventsAction from "./components/faults-events-action"; */
 
 const ValidRawMessage = () => {
   const { t } = useTranslation();
@@ -84,57 +83,6 @@ const ValidRawMessage = () => {
         </div>
       )}
     </div>
-    /*     <>
-      <div className="space-y-6">
-        {models.dataList.length === 0 && (
-          <div className="space-y-6">
-            <div className="col-span-12 lg:col-span-12 overflow-x-auto">
-              <AdvancedTable
-                dataList={models.dataList}
-                ignoreList={models.ignoreList}
-                pickers={pickers}
-              />
-            </div>
-          </div>
-        )}
-        {models.dataList.map((item, index) => {
-          return (
-            <div key={index}>
-              <div className="grid grid-cols-12 gap-6">
-                <div className="col-span-12 lg:col-span-12 overflow-x-auto">
-                  <AdvancedTable
-                    dataList={[item]}
-                    ignoreList={models.ignoreList}
-                    pickers={index === 0 ? pickers : null}
-                    ifPagination={false}
-                  />
-                </div>
-              </div>
-              {item[t("faults")] && (
-                <div className="grid grid-cols-12 gap-6 lg:mx-20">
-                  <div className="col-span-12 lg:col-span-12 overflow-x-auto">
-                    <AdvancedTable
-                      dataList={item[t("faults")]}
-                      label={t("faults")}
-                    />
-                  </div>
-                </div>
-              )}
-              {item[t("events")] && (
-                <div className="grid grid-cols-12 gap-6 lg:mx-20 pt-6">
-                  <div className="col-span-12 lg:col-span-12 overflow-x-auto">
-                    <AdvancedTable
-                      dataList={item[t("events")]}
-                      label={t("events")}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </> */
   );
 };
 

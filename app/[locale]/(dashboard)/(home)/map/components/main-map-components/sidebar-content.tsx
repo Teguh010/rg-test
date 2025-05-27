@@ -13,7 +13,7 @@ import { Icon } from '@iconify/react';
 import { useUser } from '@/context/UserContext';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/redux/store'; // Import RootState untuk tipe state
+import { RootState, AppDispatch } from '@/redux/store';
 import {
   setStartDate as setStartDateAction,
   setEndDate as setEndDateAction,
@@ -74,7 +74,7 @@ const SidebarContent = ({
   };
 
   const userToken = getUserRef().token;
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const {
     searchQuery,

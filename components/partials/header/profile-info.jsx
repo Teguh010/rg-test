@@ -313,7 +313,14 @@ const ProfileInfo = () => {
           className='flex items-center gap-2 text-sm font-medium text-default-600 my-1 px-3 dark:hover:bg-background cursor-pointer'
           onClick={() => {
             clearUser()
-            window.location.assign("/")
+            const isManagerToken = localStorage.getItem("is-manager-token") == "true"
+            const isManagerPath = window.location.pathname.includes("/manager")
+
+            if (isManagerToken || isManagerPath) {
+              window.location.assign("/manager/login")
+            } else {
+              window.location.assign("/")
+            }
           }}
         >
           <Icon icon='heroicons:power' className='w-4 h-4' />

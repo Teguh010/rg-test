@@ -102,12 +102,25 @@ const LogInForm = () => {
 
   const handleSuccess = (result, data) => {
     toast.success('Login Successful')
-    setUser({
+    
+    const userData = {
       token: result.access_token,
       username: data.username,
       password: data.password,
-      customer: data.customer
-    })
+      customer: data.customer,
+      role: 'user' // Explicitly set role for client users
+    };
+    
+    // Set user in context
+    setUser(userData);
+    
+    // Store in client-specific storage
+    localStorage.setItem('userData-client', JSON.stringify(userData));
+    localStorage.setItem('current-role', 'user');
+    
+    // Remove any old generic userData if it exists
+    localStorage.removeItem('userData');
+    
     window.location.assign('/map')
     reset()
   }
@@ -245,11 +258,6 @@ const LogInForm = () => {
           {isPending ? "Loading..." : "Sign In"}
         </Button>
       </form>
-      <div className='mt-4 mb-6'>
-        <Button variant='outline' className='w-full' onClick={() => router.push("/manager/login")}>
-          Login as Manager
-        </Button>
-      </div>
     </div>
   )
 }

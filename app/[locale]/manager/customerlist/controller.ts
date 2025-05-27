@@ -58,7 +58,6 @@ export const controller = () => {
 
         const response = await listCustomers(currentUser.token);
         if (response?.success) {
-          console.log("Customers fetched:", response.data);
           
           const formattedData = response.data.map(customer => ({
             ...customer,

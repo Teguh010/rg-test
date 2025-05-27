@@ -38,8 +38,11 @@ export const getManagerMenus = (hasSelectedCustomer = false) => {
           icon: Building2,
         },
       ]
-    },
-    {
+    }
+  ];
+
+  const customerDependentMenus = [
+     {
       title: "Users",
       icon: Users,
       child: [
@@ -49,10 +52,7 @@ export const getManagerMenus = (hasSelectedCustomer = false) => {
           icon: Users,
         },
       ]
-    }
-  ];
-
-  const customerDependentMenus = [
+    },
     {
       title: "Objects",
       icon: Building2,

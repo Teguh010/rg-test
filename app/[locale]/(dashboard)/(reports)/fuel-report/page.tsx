@@ -10,6 +10,7 @@ import TopComponents from "./components/header-fuel";
 import FooterMapFuel from "./components/footer-map-fuel";
 import { useUser } from "@/context/UserContext";
 import { relogin } from "@/lib/auth";
+import { AppDispatch } from "@/redux/store";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -35,7 +36,7 @@ const Home = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
 
   const userToken = getUserRef().token;
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { isPageLoading, isLoadingVehicles, vehiclesToMap, searchQuery } =
     useSelector((state: RootState) => state.maps);
 

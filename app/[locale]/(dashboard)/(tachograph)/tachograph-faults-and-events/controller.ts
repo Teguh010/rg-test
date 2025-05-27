@@ -50,18 +50,6 @@ export const controller = () => {
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  /*   const filterData = (objects: any[]) => {
-    return objects
-      .map((obj) => {
-        const newObj = { ...obj };
-        if (newObj.faults || newObj.events) {
-          return reorderObject(newObj, orderList);
-        }
-      })
-      .filter((item) => item !== undefined);
-  }; */
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filterData = (objects: any[]) => {
     const dataTachoFaultsLockedListFilter = [];
     const dataTachoFaultsNotLockedListFilter = [];

@@ -1,5 +1,8 @@
-"use client";
-import { useEffect, useState } from "react";
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSelectedCustomerStore } from '@/store/selected-customer';
+import { useTranslation } from 'react-i18next';
 import dynamic from "next/dynamic";
 import { controller } from "./controller";
 import { Button } from "@/components/ui/button";
@@ -8,23 +11,29 @@ import VehiclePicker from "@/components/partials/pickers/vehicle-picker";
 import LayoutLoader from "@/components/layout-loader";
 import AdvancedTable from "@/components/partials/advanced";
 import loadHereMaps from "@/components/maps/here-map/utils/here-map-loader";
-import { useTranslation } from "react-i18next";
 import { SettingsPicker } from "./components/settings-picker";
 import { Label } from "@radix-ui/react-label";
 import { firstUpperLetter } from "@/lib/utils";
-import { useSelectedCustomerStore } from "@/store/selected-customer";
 /* import { Card, CardContent } from "@/components/ui/card";
 import Timeline from "@/components/timeline"; */
 
 const HereMap = dynamic(() => import("./HereMap"), { ssr: false });
 
 const ValidRawMessage = () => {
+  const router = useRouter();
   const { t } = useTranslation();
+  const { selectedCustomerId } = useSelectedCustomerStore();
+  
+  useEffect(() => {
+    if (!selectedCustomerId) {
+      router.push('/manager/dashboard');
+    }
+  }, [selectedCustomerId, router, t]);
+  
   const [mapLoaded, setMapLoaded] = useState(false);
   const { models, operations } = controller();
   const [selectedRowData, setSelectedRowData] = useState([]);
   const [isMapVisible, setIsMapVisible] = useState(true);
-    const selectedCustomerId = useSelectedCustomerStore((state) => state.selectedCustomerId);
 
   useEffect(() => {
     loadHereMaps(() => setMapLoaded(true));
@@ -32,18 +41,6 @@ const ValidRawMessage = () => {
 
   if (!models.user || models.isLoading) {
     return <LayoutLoader />;
-  }
-
-  if (!selectedCustomerId) {
-    return (
-      <div className="text-center h-[calc(100vh-200px)]">
-        <div className="text-center p-6 bg-gray-50 rounded-lg shadow-sm">
-          <p className="text-gray-600">
-            {firstUpperLetter(t("Customer Required, Please Select Customer"))}
-          </p>
-        </div>
-      </div>
-    );
   }
 
   const toggleMapVisibility = () => {

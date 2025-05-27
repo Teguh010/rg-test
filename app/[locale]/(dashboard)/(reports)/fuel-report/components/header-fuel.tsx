@@ -6,6 +6,7 @@ import DatePickerWithRange from './date-picker-with-range';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store'; // Import RootState untuk tipe state
+import { AppDispatch } from '@/redux/store';
 
 import {
   setStartDate as setStartDateAction,
@@ -16,7 +17,7 @@ import {
 const TopComponents = ({ vehicleHistoryMap, isGenerate, handleGenerateClick }) => {
   const { t } = useTranslation();
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const { startDate, endDate, vehicle, dataObjectList, settings } = useSelector(
     (state: RootState) => state.fuel

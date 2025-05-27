@@ -35,10 +35,19 @@ const handleErrorResponse = async (
 export const apiRequest = async (
   _token: string | null,
   method: string,
-  params: any
+  params: any,
+  options = { tokenSource: "client" }
 ) => {
-  const latestUserData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const latestToken = latestUserData.token;
+  // Get token based on tokenSource
+  let latestToken = _token;
+  
+  if (options.tokenSource === "client") {
+    const userData = JSON.parse(localStorage.getItem("userData-client") || "{}");
+    latestToken = userData.token || _token;
+  } else if (options.tokenSource === "manager") {
+    const userData = JSON.parse(localStorage.getItem("userData-manager") || "{}");
+    latestToken = userData.token || _token;
+  }
 
   if (!latestToken) {
     return null;
@@ -114,8 +123,9 @@ export const apiAuth = async (
 };
 
 export const apiRefreshToken = async () => {
-  const latestUserData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const latestToken = latestUserData.token;
+  // Get token from the client storage
+  const userData = JSON.parse(localStorage.getItem("userData-client") || "{}");
+  const latestToken = userData.token;
 
   if (!latestToken) {
     return null;

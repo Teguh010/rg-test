@@ -68,3 +68,18 @@ export const deleteUser = async (token: string | null, userId: number) => {
     throw error;
   }
 };
+
+export const getUserToken = async (token: string | null, userId: string | number) => {
+  try {
+    const userIdNumber = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+    
+    const result = await apiManagerRequest(token, "user.get_token", {
+      user_id: userIdNumber
+    });
+    const data = JSON.parse(result);
+    return data;
+  } catch (error) {
+    console.error('Error getting user token:', error);
+    throw error;
+  }
+};

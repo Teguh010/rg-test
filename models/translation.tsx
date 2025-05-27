@@ -16,7 +16,14 @@ export const translationList = async (token: string | null, languageCode: string
   };
 
   try {
-    const result: string = await apiRequest(token, "translation.list", params);
+    // Check if we're in manager context
+    const isManagerContext = typeof window !== 'undefined' && 
+      window.location.pathname.includes('/manager');
+    
+    // Use appropriate token source based on context
+    const tokenSource = isManagerContext ? "manager" : "client";
+    
+    const result: string = await apiRequest(token, "translation.list", params, { tokenSource });
     const data = JSON.parse(result);
 
     if (Array.isArray(data)) {
@@ -36,11 +43,18 @@ export const translationListForWebUse = async (token: string | null, languageCod
   };
 
   try {
-    const result: string = await apiRequest(token, "translation.list", params);
+    // Check if we're in manager context
+    const isManagerContext = typeof window !== 'undefined' && 
+      window.location.pathname.includes('/manager');
+    
+    // Use appropriate token source based on context
+    const tokenSource = isManagerContext ? "manager" : "client";
+    
+    const result: string = await apiRequest(token, "translation.list", params, { tokenSource });
     const data = JSON.parse(result);
 
     if (Array.isArray(data)) {
-      return data; // Return array langsung karena sudah sesuai format
+      return data;
     } else {
       throw new Error('Invalid response format: expected array of translations');
     }
@@ -52,7 +66,14 @@ export const translationListForWebUse = async (token: string | null, languageCod
 
 export const translationLanguagesList = async (token: string | null) => {
   try {
-    const result: string = await apiRequest(token, "translation.languages_list", {});
+    // Check if we're in manager context
+    const isManagerContext = typeof window !== 'undefined' && 
+      window.location.pathname.includes('/manager');
+    
+    // Use appropriate token source based on context
+    const tokenSource = isManagerContext ? "manager" : "client";
+    
+    const result: string = await apiRequest(token, "translation.languages_list", {}, { tokenSource });
     const data: TranslationResponse = JSON.parse(result);
 
     if (Array.isArray(data.result)) {
@@ -79,7 +100,14 @@ export const translationSetSingle = async (
   };
 
   try {
-    const result: string = await apiRequest(token, "translation.set", params);
+    // Check if we're in manager context
+    const isManagerContext = typeof window !== 'undefined' && 
+      window.location.pathname.includes('/manager');
+    
+    // Use appropriate token source based on context
+    const tokenSource = isManagerContext ? "manager" : "client";
+    
+    const result: string = await apiRequest(token, "translation.set", params, { tokenSource });
     const data: TranslationResponse = JSON.parse(result);
     return data.result as boolean;
   } catch (error) {
@@ -99,9 +127,16 @@ export const translationSetBulk = async (
   };
 
   try {
-    const result: string = await apiRequest(token, "translation.set_bulk", params);
+    // Check if we're in manager context
+    const isManagerContext = typeof window !== 'undefined' && 
+      window.location.pathname.includes('/manager');
+    
+    // Use appropriate token source based on context
+    const tokenSource = isManagerContext ? "manager" : "client";
+    
+    const result: string = await apiRequest(token, "translation.set_bulk", params, { tokenSource });
     const data: TranslationResponse = JSON.parse(result);
-    return data.result === true; // Pastikan mengembalikan boolean
+    return data.result === true;
   } catch (error) {
     console.error('Error setting bulk translations:', error);
     throw error;

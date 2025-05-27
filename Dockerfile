@@ -8,10 +8,9 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* ./
+COPY package.json package-lock.json* ./
 RUN \
-  if [ -f yarn.lock ]; then yarn install; \
-  elif [ -f package-lock.json ]; then npm install; \
+  if [ -f package-lock.json ]; then npm install --legacy-peer-deps; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
@@ -32,8 +31,7 @@ RUN if [ -f next.config.js ]; then cat next.config.js; fi
 
 # Try to build with more verbose output
 RUN \
-  if [ -f yarn.lock ]; then yarn build || (echo "Build failed" && yarn build --verbose); \
-  elif [ -f package-lock.json ]; then npm run build || (echo "Build failed" && npm run build --verbose); \
+  if [ -f package-lock.json ]; then npm run build || (echo "Build failed" && npm run build --verbose); \
   else echo "Lockfile not found." && exit 1; \
   fi
 
@@ -47,6 +45,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# For Coolify health checks
+RUN apk add --no-cache curl
+
+# Setup PM2
+RUN npm install -g pm2
+RUN pm2 install pm2-logrotate
+RUN pm2 update
+
 # Copy necessary files for running the application
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
@@ -54,6 +60,7 @@ COPY --from=builder /app/package.json ./package.json
 # Copy the built app
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/pm2.config.js ./pm2.config.js
 
 USER nextjs
 
@@ -63,4 +70,5 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Start the server
-CMD ["npm", "start"]
+#CMD ["npm", "start"]
+CMD sh -c "pm2 ping && pm2-runtime start pm2.config.js"

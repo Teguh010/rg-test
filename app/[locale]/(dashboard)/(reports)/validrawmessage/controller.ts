@@ -264,8 +264,6 @@ export const controller = () => {
     getUserRef,
   ]);
 
-  console.log("dataDatatypeList: ", dataDatatypeList);
-
   return {
     models: {
       user,

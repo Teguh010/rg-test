@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useSidebarStore, useThemeStore } from "@/store";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import ThemeButton from "./theme-button";
+// import ThemeButton from "./theme-button";
 import ProfileInfo from "./profile-info";
 import HorizontalMenu from "./horizontal-menu";
 import Language from "./language";
@@ -13,13 +13,14 @@ import Refresh from "./refresh";
 import Image from "next/image";
 import Link from "next/link";
 import logo from "@/public/images/logo/logo_mini_tracegrid.png";
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useUser } from "@/context/UserContext";
 import { useSelectedCustomerStore } from "@/store/selected-customer";
 import { selectCustomer } from "@/models/manager/session";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import CustomSelect from "@/components/partials/manager-header/custom-select";
+import { menusConfig } from "@/config/menus";
 import { getManagerMenus } from "@/config/manager-menus";
 
 interface NavToolsProps {
@@ -92,6 +93,12 @@ const Header: React.FC<HeaderProps> = ({ handleOpenSearch }) => {
   const { navbarType } = useThemeStore();
   const isDesktop = useMediaQuery("(min-width: 1280px)");
   const { models: { userProfileData }, operations: { getUserRef } } = useUser();
+  
+  const pathname = usePathname();
+  const router = useRouter();
+  const { i18n } = useTranslation();
+  const currentLocale = i18n.language;
+
   const isManager = userProfileData?.role === "manager";
   const { t } = useTranslation();
   
@@ -122,6 +129,11 @@ const Header: React.FC<HeaderProps> = ({ handleOpenSearch }) => {
       const response = await selectCustomer(currentUser.token, customer.id);
       if (response?.success) {
         setSelectedCustomer(customer.id, customer.name);
+        
+        // Add redirect logic - if on dashboard page, redirect to module overview
+        if (pathname.includes('/manager/dashboard')) {
+          router.push(`/${currentLocale}/manager/moduleoverview`);
+        }
       } else {
         toast.error(t("error.select_customer"));
       }
@@ -131,8 +143,18 @@ const Header: React.FC<HeaderProps> = ({ handleOpenSearch }) => {
     }
   };
 
+  // Determine which menus to use based on user role and path
   const hasSelectedCustomer = !!selectedCustomerId;
-  const managerMenus = getManagerMenus(hasSelectedCustomer);
+  
+  // Use different menus based on user role and current path
+  let menuConfig;
+  if (isManager && pathname.includes('/manager')) {
+    // For manager pages, use manager menus
+    menuConfig = getManagerMenus(hasSelectedCustomer);
+  } else {
+    // For client pages, use client menus from menusConfig
+    menuConfig = { mainNav: menusConfig.mainNav };
+  }
 
   // set header style to classic if isDesktop
   useEffect(() => {
@@ -154,7 +176,7 @@ const Header: React.FC<HeaderProps> = ({ handleOpenSearch }) => {
       </div> */}
       {isDesktop ? (
         <div className="bg-card bg-card/90 backdrop-blur-lg w-full px-6 shadow-md  flex justify-between">
-          <HorizontalMenu customMenus={managerMenus} />
+          <HorizontalMenu customMenus={menuConfig} />
           <NavTools
             isDesktop={isDesktop}
             sidebarType={sidebarType}
@@ -177,15 +199,34 @@ const Header: React.FC<HeaderProps> = ({ handleOpenSearch }) => {
                 className=" mx-auto text-primary h-8 w-8"
               />
             </Link>
-             {userProfileData?.role === "manager" && (
-              <CustomSelect
-                value={selectedValue}
-                onChange={handleCustomerSelect}
-                options={customerOptions}
-                placeholder={t("select_customer")}
-                className='min-w-[200px]'
-                onClear={() => setSelectedValue('')}
-              />
+             {isManager && pathname.includes('/manager') && (
+              <div className='pt-0'>
+                <CustomSelect
+                  value={selectedValue}
+                  onChange={handleCustomerSelect}
+                  options={customerOptions}
+                  placeholder={t("select_customer")}
+                  className='min-w-[200px]'
+                  onClear={async () => {
+                    setSelectedValue('');
+                    
+                    const currentUser = getUserRef();
+                    if (!currentUser?.token) return;
+                    
+                    try {
+                      const response = await selectCustomer(currentUser.token, 0);
+                      if (response?.success) {
+                        setSelectedCustomer(null, null);
+                      } else {
+                        toast.error("Error Selecting Customer");
+                      }
+                    } catch (error) {
+                      console.error('Error deselecting customer:', error);
+                      toast.error("Error deselecting Customer");
+                    }
+                  }}
+                />
+              </div>
             )}
             </div>
             <div>

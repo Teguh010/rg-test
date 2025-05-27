@@ -25,6 +25,7 @@ import { RootState } from '@/redux/store'; // Import RootState untuk tipe state
 import { setActiveVehicle, setVehicle } from '@/redux/features/main-map/maps-slice';
 import { setHistoryVehicle, setAllowZooming } from '@/redux/features/history-map/history-slice';
 import { fetchHereAddress } from '@/lib/utils';
+import { AppDispatch } from '@/redux/store';
 
 interface HereMapProps {
   lat?: number
@@ -58,7 +59,7 @@ const HereMap: React.FC<HereMapProps> = ({
 
   const { historyVehicle, allowZooming } = useSelector((state: RootState) => state.history);
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const customIcon = L.icon({
     iconUrl: markerIconPng.src,

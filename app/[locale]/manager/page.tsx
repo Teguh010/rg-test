@@ -1,38 +1,58 @@
 'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import ManagerLoginForm from '@/components/auth/manager-login-form';
-import Image from 'next/image';
+import { isLocationAllowed } from '@/lib/geo-restriction';
 
-export default function ManagerLoginPage() {
-  const { t } = useTranslation();
+export default function ManagerPage() {
+  const router = useRouter();
+  const { i18n, t } = useTranslation();
+  const currentLocale = i18n.language;
+  const [isChecking, setIsChecking] = useState(true);
 
-  return (
-    <div className="relative h-screen">
-      <div className="grid h-screen grid-cols-1 md:grid-cols-2">
-        <div className="relative hidden h-screen md:block">
-          <Image
-            className="h-full w-full object-cover"
-            src="/images/auth/bg.jpg"
-            alt="bg"
-            fill
-          />
-        </div>
-        <div className="flex h-screen items-center justify-center p-5 lg:p-[100px]">
-          <div className="w-full">
-            <Image
-              src="/images/logo/logo.png"
-              alt="logo"
-              width={180}
-              height={45}
-              className="mb-[60px]"
-            />
-            <h4 className="mb-[30px] text-2xl font-bold">
-              {t('general.manager_login')}
-            </h4>
-            <ManagerLoginForm />
-          </div>
-        </div>
+  useEffect(() => {
+    const checkAccessAndRedirect = async () => {
+      try {
+        const locationAllowed = await isLocationAllowed();
+        
+        if (!locationAllowed) {
+          router.push(`/${currentLocale}`);
+          return;
+        }
+        
+        const userData = localStorage.getItem('userData-manager');
+        if (userData) {
+          try {
+            const parsedData = JSON.parse(userData);
+            if (parsedData.token && parsedData.role === 'manager') {
+              router.push(`/${currentLocale}/manager/dashboard`);
+              return;
+            }
+          } catch (error) {
+            console.error('Error parsing user data:', error);
+          }
+        }
+        
+        router.push(`/${currentLocale}/manager/login`);
+      } catch (error) {
+        console.error('Error checking access:', error);
+        router.push(`/${currentLocale}`);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    
+    checkAccessAndRedirect();
+  }, [router, currentLocale, t]);
+
+  // Tampilkan loading selama pemeriksaan
+  if (isChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }

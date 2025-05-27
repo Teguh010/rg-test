@@ -12,6 +12,8 @@ import CustomInput from '@/components/organisms/ReusableInput';
 import ReusableDialog from '@/components/organisms/ReusableDialog';
 import { useUser } from '@/context/UserContext';
 import { RootState } from '@/redux/store';
+import { AppDispatch } from '@/redux/store';
+
 
 const Worker = () => {
   const { t } = useTranslation();
@@ -20,7 +22,7 @@ const Worker = () => {
   const UserContext = useUser();
   const { getUserRef } = UserContext.operations;
   const userToken = getUserRef().token;
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const { dataWorkerList, ignoreList, formData } = useSelector((state: RootState) => state.options);
 

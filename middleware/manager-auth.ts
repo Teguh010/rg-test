@@ -10,7 +10,7 @@ export function useManagerAuth() {
 
   useEffect(() => {
     const checkManagerAuth = () => {
-      const userData = localStorage.getItem('userData');
+      const userData = localStorage.getItem('userData-manager');
       if (!userData) {
         router.replace('/auth/manager-login');
         return;

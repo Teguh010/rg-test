@@ -258,7 +258,7 @@ export const tachoDistanceDrivenList = async (token: string | null, params: any)
 
 export const tachoDrivingStatList = async (token: string | null, params: any) => {
   try {
-    const result: string = await apiRequest(token, "tachograph.driving_stats_by_driver_card_data", params);
+    const result = await apiRequest(token, "tachograph.driving_stats_by_driver_card_data", params);
     const data = JSON.parse(result);
     return data;
   } catch (error) {

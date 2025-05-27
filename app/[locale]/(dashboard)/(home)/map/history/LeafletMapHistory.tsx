@@ -6,6 +6,7 @@ import L from 'leaflet';
 import { AntPath, antPath } from 'leaflet-ant-path';
 import { handleSelectHistoryDataStore } from '@/redux/features/history-map/history-thunks'; // Impor thunk
 import { RootState } from '@/redux/store'; // Import RootState untuk tipe state
+import { AppDispatch } from '@/redux/store';
 
 interface HereMapProps {
   lat: number
@@ -44,7 +45,8 @@ const LeafletMapHistory = forwardRef<any, HereMapProps>(
     const { allowZoom, stopIndex, selectedHistoryData, chartData } = useSelector(
       (state: RootState) => state.history
     );
-    const dispatch = useDispatch();
+  
+    const dispatch = useDispatch<AppDispatch>();
 
     const dotIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 16 16"><path fill="#0000FF" d="M8 4C5.8 4 4 5.8 4 8s1.8 4 4 4s4-1.8 4-4s-1.8-4-4-4"/><path fill="#0000FF" d="M8 1c3.9 0 7 3.1 7 7s-3.1 7-7 7s-7-3.1-7-7s3.1-7 7-7m0-1C3.6 0 0 3.6 0 8s3.6 8 8 8s8-3.6 8-8s-3.6-8-8-8"/></svg>`;
 

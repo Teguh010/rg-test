@@ -37,6 +37,8 @@ const CustomSelect = ({
     e.preventDefault()
     e.stopPropagation()
     
+    onClear?.()
+    
     const currentUser = getUserRef()
     if (!currentUser?.token) return
 
@@ -44,8 +46,6 @@ const CustomSelect = ({
       const response = await deselectCustomer(currentUser.token)
       if (response?.success) {
         clearSelectedCustomer()
-        onClear?.() 
-        onChange('') 
         toast.success(t("success.customer_deselected"))
       } else {
         toast.error(t("error.deselect_customer"))
@@ -56,7 +56,6 @@ const CustomSelect = ({
     }
   }
 
-  // Filter options based on search query
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchQuery.toLowerCase())
   )

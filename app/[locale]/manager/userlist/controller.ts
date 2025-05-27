@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
-import { listUsers } from "@/models/manager/users";
+import { listUsers, getUserToken } from "@/models/manager/users";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useSelectedCustomerStore } from "@/store/selected-customer";
@@ -27,6 +27,7 @@ export const controller = () => {
   const [userList, setUserList] = useState<User[]>([]);
   const [dataGenerated, setDataGenerated] = useState(false);
   const [ignoreList] = useState([{ title: "id" }]);
+  const [actionList] = useState([]);
   const [styleRowList] = useState([
     {
       title: "is_active",
@@ -39,27 +40,61 @@ export const controller = () => {
     { title: "worker" }
   ]);
 
-   const { 
-      selectedCustomerId
-    } = useSelectedCustomerStore();
+  const { 
+    selectedCustomerId
+  } = useSelectedCustomerStore();
 
-    useEffect(() => {
-     const fetchData = async () => {
+  const handleGetUserToken = async (userId: number) => {
+    const currentUser = getUserRef();
+    if (!currentUser?.token) {
+      toast.error(t("error.no_token"));
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await getUserToken(currentUser.token, userId);
+      
+      if (response && response.result) {
+        const token = response.result;
+        
+        const clientUserData = {
+          token: token,
+          role: 'user' as 'user'
+        };
+        
+        localStorage.setItem('temp-userData-client', JSON.stringify(clientUserData));
+        
+        const clientUrl = `${window.location.origin}/client-access?access_token=${encodeURIComponent(token)}`;
+        window.open(clientUrl, '_blank');
+        
+        toast.success("Opening client view...");
+        
+      } else {
+        toast.error("Failed to get user token");
+      }
+    } catch (error) {
+      console.error("Error getting user token:", error);
+      toast.error("Failed to get user token");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
       const currentUser = getUserRef();
       if (!currentUser?.token) return;
 
       setLoading(true);
       try {
         const response = await listUsers(currentUser.token);
-        console.log("Users fetched:", response);
         if (response) {
-          console.log("Users fetched:", response);
           setUserList(response);
           setDataGenerated(true);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error(t("error.fetch_data"));
       } finally {
         setLoading(false);
       }
@@ -74,10 +109,13 @@ export const controller = () => {
       loading,
       userList,
       ignoreList,
+      actionList,
       styleRowList,
       dataGenerated,
       searchList
     },
-    operations: {}
+    operations: {
+      handleGetUserToken
+    }
   };
 };

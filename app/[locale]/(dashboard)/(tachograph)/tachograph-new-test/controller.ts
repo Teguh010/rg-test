@@ -466,7 +466,6 @@ export const controller = () => {
           "birth_date",
           "card_expiry_date",
         ]);
-        console.log("translated: ", translated);
         setDataList(translated);
       } catch (err) {
         toast.error(firstUpperLetter(t("general.process_error")));

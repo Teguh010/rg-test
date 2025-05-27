@@ -13,6 +13,7 @@ import FooterMap from './components/main-map-components/footer-map';
 import FooterMapHistory from './components/history-components/footer-map-history';
 import { useUser } from '@/context/UserContext';
 import { relogin } from '@/lib/auth';
+import { AppDispatch } from '@/redux/store';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchData, fetchGroupListData } from '@/redux/features/main-map';
@@ -29,7 +30,8 @@ const LeafletMapHistory = dynamic(() => import('./history/LeafletMapHistory'), {
 const Home = () => {
   const { t } = useTranslation();
   const UserContext = useUser();
-  const { getUserRef } = UserContext.operations;
+  const { operations } = UserContext;
+  const { getUserRef, checkAndRefreshToken } = operations;
   const [mapLoaded, setMapLoaded] = useState(false);
   const [stopsData, setStopsData] = useState([]);
   const [trajectoryData, setTrajectoryData] = useState([]);
@@ -50,7 +52,7 @@ const Home = () => {
 
   const [indexData, setIndexData] = useState(null);
   const userToken = getUserRef().token;
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { vehicle, isPageLoading, isLoadingVehicles, vehiclesToMap, searchQuery, tachoData } = useSelector(
     (state: RootState) => state.maps
   );
@@ -84,13 +86,29 @@ const Home = () => {
 
   useEffect(() => {
     if (userToken && !isMaintenanceMode) {
-      const intervalId = setInterval(() => {
-        dispatch(fetchData(userToken));
-      }, 20000);
-
+      const fetchDataWithTokenCheck = async () => {
+        try {
+          const isManagerToken = localStorage.getItem('is-manager-token') === 'true';
+          if (isManagerToken) {
+            const tokenRefreshed = await checkAndRefreshToken();
+            if (tokenRefreshed) {
+              console.warn('Token refreshed before fetching data');
+            }
+          }
+          
+          await dispatch(fetchData(userToken));
+        } catch (error) {
+          console.error('Error in fetchData:', error);
+        }
+      };
+      
+      fetchDataWithTokenCheck();
+      
+      const intervalId = setInterval(fetchDataWithTokenCheck, 20000);
+      
       return () => clearInterval(intervalId);
     }
-  }, [dispatch, userToken, isMaintenanceMode]);
+  }, [dispatch, userToken, isMaintenanceMode, checkAndRefreshToken]);
 
   useEffect(() => {
     if (vehicle) {

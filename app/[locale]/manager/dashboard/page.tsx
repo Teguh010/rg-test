@@ -19,11 +19,9 @@ export default function ManagerDashboard() {
         const currentUser = getUserRef();
         if (!currentUser?.token) return;
 
-        console.log("Fetching customers..."); 
         const response = await listCustomers(currentUser.token);
         
         if (response?.success) {
-          console.log("Customers fetched:", response.data); 
           setCustomers(response.data || []);
         } else {
           console.error("Failed to fetch customers:", response?.message);

@@ -7,12 +7,19 @@ import React, {
   useCallback,
   useRef,
 } from 'react';
-const jwtDecode = require('jwt-decode');
+import { jwtDecode } from 'jwt-decode';
 
 import { settingList, settingUpdate } from '@/models/setting';
-import { userProfile, refreshTokenModel } from '@/models/user_profile';
+import { refreshTokenModel } from '@/models/user_profile';
 import { apiManagerRefreshToken } from '@/models/manager/common';
 import { relogin } from '@/lib/auth';
+
+// Define storage keys at the top of the file
+const STORAGE_KEYS = {
+  USER: 'userData-client',
+  MANAGER: 'userData-manager',
+  CURRENT_ROLE: 'current-role' // To track which role is active in the current tab
+};
 
 export interface Setting {
   title: string
@@ -26,6 +33,8 @@ export interface User {
   customer: string | null
   role?: 'manager' | 'user'
   manager?: string | null
+  isClientView?: boolean
+  userId?: string | number
 }
 
 interface UserContextType {
@@ -40,6 +49,7 @@ interface UserContextType {
     setSettings: (settings: Setting[]) => void
     refreshToken: () => void
     getUserRef: () => User | null
+    checkAndRefreshToken: () => Promise<boolean>
   }
 }
 
@@ -55,6 +65,7 @@ const UserContext = createContext<UserContextType>({
     setSettings: () => {},
     refreshToken: () => {},
     getUserRef: () => null,
+    checkAndRefreshToken: () => Promise.resolve(false),
   },
 });
 
@@ -65,13 +76,6 @@ const defaultSettings: Setting[] = [
   { title: 'unit_volume', value: 'l' },
   { title: 'unit_distance', value: 'km' },
 ];
-
-const formatDuration = (milliseconds: number): string => {
-  const totalSeconds = Math.floor(milliseconds / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes} minutes ${seconds} seconds`;
-};
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUserState] = useState<User | null>(null); // Initialize as null
@@ -89,6 +93,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUserState((prevUser) => {
       const updatedUser = { ...prevUser, ...newUser };
       
+      // Determine which storage key to use based on role
+      const storageKey = updatedUser.role === 'manager' 
+        ? STORAGE_KEYS.MANAGER 
+        : STORAGE_KEYS.USER;
+      
       // Store only necessary data based on role
       const storageData = {
         token: updatedUser.token,
@@ -100,12 +109,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
 
       if (updatedUser.token) {
-        // Store in localStorage
-        localStorage.setItem('userData', JSON.stringify(storageData));
+        // Store in role-specific localStorage
+        localStorage.setItem(storageKey, JSON.stringify(storageData));
+        
+        // Track current active role for this tab
+        localStorage.setItem(STORAGE_KEYS.CURRENT_ROLE, updatedUser.role || 'user');
         
         // Store in cookies with proper encoding
         const encodedData = encodeURIComponent(JSON.stringify(storageData));
-        document.cookie = `userData=${encodedData}; path=/; max-age=86400`;
+        document.cookie = `${storageKey}=${encodedData}; path=/; max-age=86400`;
       }
       
       return updatedUser;
@@ -113,9 +125,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const handleClearUser = useCallback(() => {
-    localStorage.removeItem('userData');
+    const currentRole = localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE) || 'user';
+    const storageKey = currentRole === 'manager' ? STORAGE_KEYS.MANAGER : STORAGE_KEYS.USER;
+    
+    localStorage.removeItem(storageKey);
     localStorage.removeItem('token');
-    localStorage.removeItem('userdata');
     localStorage.removeItem('manager-selected-customer');
     setUserState(null);
     setSettingsState([]);
@@ -161,7 +175,7 @@ const refreshToken = useCallback(async () => {
   // Decode token to get the exp value
   const getTokenExpirationTime = useCallback((token: string) => {
     try {
-      const decoded = jwtDecode.jwtDecode(token);
+      const decoded = jwtDecode(token);
       const expTime = decoded.exp ? decoded.exp * 1000 : null; // Convert to millisecond
       return expTime;
     } catch (error) {
@@ -172,7 +186,17 @@ const refreshToken = useCallback(async () => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedUserData = localStorage.getItem('userData');
+      // Get current role for this tab
+      const currentRole = localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE);
+      
+      // Determine which storage to use based on current role or URL path
+      const isManagerPath = window.location.pathname.includes('/manager');
+      const storageKey = isManagerPath || currentRole === 'manager' 
+        ? STORAGE_KEYS.MANAGER 
+        : STORAGE_KEYS.USER;
+      
+      const storedUserData = localStorage.getItem(storageKey);
+      
       if (storedUserData) {
         try {
           const parsedData = JSON.parse(storedUserData);
@@ -187,6 +211,11 @@ const refreshToken = useCallback(async () => {
 
           setUserState(initialUserState);
           userRef.current = initialUserState;
+          
+          // Update current role for this tab
+          if (parsedData.role) {
+            localStorage.setItem(STORAGE_KEYS.CURRENT_ROLE, parsedData.role);
+          }
         } catch (error) {
           console.error('Error parsing userData from localStorage:', error);
           handleClearUser();
@@ -202,7 +231,12 @@ useEffect(() => {
       const currentTime = Date.now();
       const timeUntilExpiration = expirationTime - currentTime;
 
-      const refreshTime = Math.max(timeUntilExpiration - 60000, timeUntilExpiration * 0.5);
+      const isManagerToken = localStorage.getItem('is-manager-token') === 'true';
+      
+      const refreshTime = isManagerToken 
+        ? Math.max(timeUntilExpiration * 0.5, 10000)
+        : Math.max(timeUntilExpiration - 60000, timeUntilExpiration * 0.5);
+            
       if (refreshTime > 0) {
         const timeoutId = setTimeout(() => {
           refreshToken();
@@ -313,15 +347,22 @@ useEffect(() => {
   // Listener for cross-tab synchronization
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'userData') {
-        const newUserData = event.newValue ? JSON.parse(event.newValue) : null;
-        setUserState((prevUser) => ({
-          ...prevUser,
-          token: newUserData ? newUserData.token : null,
-        }));
+      // Check if the changed storage key is relevant to our context
+      if (event.key === STORAGE_KEYS.USER || event.key === STORAGE_KEYS.MANAGER) {
+        // Only update if the changed key matches our current role
+        const currentRole = localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE);
+        const relevantKey = currentRole === 'manager' ? STORAGE_KEYS.MANAGER : STORAGE_KEYS.USER;
+        
+        if (event.key === relevantKey) {
+          const newUserData = event.newValue ? JSON.parse(event.newValue) : null;
+          setUserState((prevUser) => ({
+            ...prevUser,
+            token: newUserData ? newUserData.token : null,
+          }));
 
-        if (!newUserData) {
-          setSettingsState([]);
+          if (!newUserData) {
+            setSettingsState([]);
+          }
         }
       }
     };
@@ -330,11 +371,15 @@ useEffect(() => {
       window.addEventListener('storage', handleStorageChange);
       return () => window.removeEventListener('storage', handleStorageChange);
     }
-  }, [getTokenExpirationTime]);
+  }, []);
 
   const fetchUserData = useCallback(async () => {
     if (!dataFetchedRef.current) {
-      const storedUserData = localStorage.getItem('userData');
+      // Determine which storage to use based on current role
+      const currentRole = localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE) || 'user';
+      const storageKey = currentRole === 'manager' ? STORAGE_KEYS.MANAGER : STORAGE_KEYS.USER;
+      
+      const storedUserData = localStorage.getItem(storageKey);
 
       if (storedUserData) {
         try {
@@ -376,6 +421,29 @@ useEffect(() => {
     return userRef.current;
   }, []);
 
+  const checkAndRefreshToken = useCallback(async () => {
+    const userData = userRef.current;
+    if (userData?.token) {
+      const expirationTime = getTokenExpirationTime(userData.token);
+      if (expirationTime) {
+        const currentTime = Date.now();
+        const timeUntilExpiration = expirationTime - currentTime;
+        
+        if (timeUntilExpiration < 30000) {
+          console.warn('Token will expire soon, refreshing...');
+          try {
+            await refreshToken();
+            return true; 
+          } catch (error) {
+            console.error('Failed to refresh token:', error);
+            return false; 
+          }
+        }
+      }
+    }
+    return false;
+  }, [getTokenExpirationTime, refreshToken]);
+
   return (
     <UserContext.Provider
       value={{
@@ -390,6 +458,7 @@ useEffect(() => {
           setSettings: handleSetSettings,
           refreshToken,
           getUserRef,
+          checkAndRefreshToken,
         },
       }}
     >
