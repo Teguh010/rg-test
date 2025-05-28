@@ -162,7 +162,7 @@ const LogInForm = () => {
       {isAuthError && (
         <div className='login-failed-box border border-red-600 rounded-lg p-4 mt-4'>
           <div className='login-failed-message text-red-600'>
-            Login failed: Invalid username, password, or customer name
+            Login failed: Invalid username, password, or customer name.
           </div>
         </div>
       )}
