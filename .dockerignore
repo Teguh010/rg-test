@@ -1,5 +1,4 @@
 node_modules
-.git
 docker-compose.yml
 npm-debug.log
 yarn-error.log

@@ -20,6 +20,23 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Get git information and set environment variables
+RUN \
+  if [ -d .git ]; then \
+    BRANCH=$(git rev-parse --abbrev-ref HEAD); \
+    COMMIT=$(git rev-parse --short HEAD); \
+    BUILD_TIME=$(date +%Y-%m-%d_%H-%M-%S); \
+    echo "NEXT_PUBLIC_GIT_BRANCH=$BRANCH" >> .env; \
+    echo "NEXT_PUBLIC_GIT_COMMIT=$COMMIT" >> .env; \
+    echo "NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME" >> .env; \
+    echo "Building from branch: $BRANCH, commit: $COMMIT, time: $BUILD_TIME"; \
+  else \
+    echo "NEXT_PUBLIC_GIT_BRANCH=unknown" >> .env; \
+    echo "NEXT_PUBLIC_GIT_COMMIT=unknown" >> .env; \
+    echo "NEXT_PUBLIC_BUILD_TIME=$(date +%Y-%m-%d_%H-%M-%S)" >> .env; \
+    echo "No git repository found, setting defaults"; \
+  fi
+
 # Next.js collects anonymous telemetry data about general usage.
 ENV NEXT_TELEMETRY_DISABLED=1
 

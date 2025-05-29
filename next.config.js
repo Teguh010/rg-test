@@ -1,18 +1,30 @@
 /** @type {import('next').NextConfig} */
 
-// Add environment variable validation
-// const requiredEnvVars = [
-//   'NEXT_PUBLIC_TRACEGRID_API_URL',
-//   'NEXT_PUBLIC_APP_URL',
-//   'NEXT_PUBLIC_SITE_URL'
-// ];
+// SMTP_HOST = smtp.gmail.com
+// SMTP_PORT = 465
+// SMTP_USER = teguhbaghoy6@gmail.com
+// SMTP_PASS = zrgd rcrm upjq lqqr
+// SMTP_FROM = teguhbaghoy6@gmail.com
 
-// // Validate environment variables
-// requiredEnvVars.forEach(envVar => {
-//   if (!process.env[envVar]) {
-//     throw new Error(`Missing required environment variable: ${envVar}`);
-//   }
-// });
+// Add environment variable validation
+const requiredEnvVars = [
+  'NEXT_PUBLIC_TRACEGRID_API_URL',
+  'NEXT_PUBLIC_APP_URL',
+  'NEXT_PUBLIC_SITE_URL',
+  'NEXT_PUBLIC_HERE_MAPS_TOKEN',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'SMTP_FROM',
+];
+
+// Validate environment variables
+requiredEnvVars.forEach(envVar => {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required environment variable: ${envVar}`);
+  }
+});
 
 const nextConfig = {
   webpack(config) {
