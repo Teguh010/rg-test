@@ -5,6 +5,7 @@ npm-debug.log
 yarn-error.log
 *.md
 *.log
+.env
 .vscode
 .idea
 coverage

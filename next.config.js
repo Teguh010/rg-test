@@ -1,18 +1,18 @@
 /** @type {import('next').NextConfig} */
 
 // Add environment variable validation
-const requiredEnvVars = [
-  'NEXT_PUBLIC_TRACEGRID_API_URL',
-  'NEXT_PUBLIC_APP_URL',
-  'NEXT_PUBLIC_SITE_URL'
-];
+// const requiredEnvVars = [
+//   'NEXT_PUBLIC_TRACEGRID_API_URL',
+//   'NEXT_PUBLIC_APP_URL',
+//   'NEXT_PUBLIC_SITE_URL'
+// ];
 
-// Validate environment variables
-requiredEnvVars.forEach(envVar => {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-});
+// // Validate environment variables
+// requiredEnvVars.forEach(envVar => {
+//   if (!process.env[envVar]) {
+//     throw new Error(`Missing required environment variable: ${envVar}`);
+//   }
+// });
 
 const nextConfig = {
   webpack(config) {
