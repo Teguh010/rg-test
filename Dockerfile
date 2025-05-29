@@ -58,12 +58,22 @@ RUN echo "Checking next.config.js:" && if [ -f next.config.js ]; then cat next.c
 # Debug: Check .env content
 RUN echo "Checking .env content:" && if [ -f .env ]; then cat .env; fi
 
+# Debug: Check node_modules
+RUN echo "Checking node_modules:" && ls -la node_modules
+
+# Debug: Check package.json
+RUN echo "Checking package.json:" && cat package.json
+
 # Try to build with more verbose output
 RUN \
   echo "Starting build process..." && \
   if [ -f package-lock.json ]; then \
     echo "Running npm build..." && \
-    npm run build || (echo "Build failed, retrying with verbose output..." && npm run build --verbose); \
+    NODE_ENV=production npm run build || \
+    (echo "First build attempt failed, trying with --verbose..." && \
+     NODE_ENV=production npm run build --verbose) || \
+    (echo "Build failed with verbose output, trying with debug..." && \
+     NODE_ENV=production DEBUG=* npm run build); \
   else \
     echo "Lockfile not found." && exit 1; \
   fi
