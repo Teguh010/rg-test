@@ -1,11 +1,5 @@
 /** @type {import('next').NextConfig} */
 
-// SMTP_HOST = smtp.gmail.com
-// SMTP_PORT = 465
-// SMTP_USER = teguhbaghoy6@gmail.com
-// SMTP_PASS = zrgd rcrm upjq lqqr
-// SMTP_FROM = teguhbaghoy6@gmail.com
-
 // Add environment variable validation
 const requiredEnvVars = [
   'NEXT_PUBLIC_TRACEGRID_API_URL',
@@ -16,7 +10,7 @@ const requiredEnvVars = [
   'SMTP_PORT',
   'SMTP_USER',
   'SMTP_PASS',
-  'SMTP_FROM',
+  'SMTP_FROM'
 ];
 
 // Validate environment variables
